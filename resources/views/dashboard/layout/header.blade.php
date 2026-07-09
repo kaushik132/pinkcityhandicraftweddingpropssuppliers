@@ -5,7 +5,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Pink City</title>
+    @if (isset($seo_data['seo_title']))
+        <title>{{ $seo_data['seo_title'] }}</title>
+    @else
+        <title>Pink City — Handicraft & Wedding Props</title>
+    @endif
+
+    @if (isset($seo_data['seo_description']))
+        <meta name="description" content="{{ $seo_data['seo_description'] }}" />
+    @endif
+
+    @if (isset($seo_data['keywords']))
+        <meta name="keywords" content="{{ $seo_data['keywords'] }}" />
+    @endif
+
+    <meta property="og:title" content="{{ $seo_data['seo_title'] ?? 'Pink City' }}">
+    <meta property="og:site_name" content="Pink City">
+
+    @if (isset($canocial))
+        <meta property="og:url" content="{{ $canocial }}">
+        <link rel="canonical" href="{{ $canocial }}">
+    @endif
+
+    <meta property="og:description" content="{{ $seo_data['seo_description'] ?? '' }}">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="{{ url('assets/images/favicon.png') }}">
+    <link rel="icon" type="image/png" href="{{ url('assets/images/favicon.png') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -354,75 +379,77 @@
             <!-- ============================================================
      Mobile Search Popup
      ============================================================ -->
-       <div x-show="searchOpen" x-cloak x-transition:enter="transition ease-out duration-200"
-    x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
-    x-transition:leave="transition ease-in duration-150"
-    x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-2"
-    class="sm:hidden px-4 pb-3"
-    x-data="{
-        query: '',
-        suggestions: [],
-        showDropdown: false,
-        loading: false,
-        searchTimeout: null,
-        fetchSuggestions() {
-            clearTimeout(this.searchTimeout);
-            if (this.query.length < 2) {
-                this.suggestions = [];
-                this.showDropdown = false;
-                return;
-            }
-            this.searchTimeout = setTimeout(() => {
-                fetch(`{{ route('products.search-suggestions') }}?q=${encodeURIComponent(this.query)}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        this.suggestions = data;
-                        this.showDropdown = data.length > 0;
-                    });
-            }, 300);
-        }
-    }">
+            <div x-show="searchOpen" x-cloak x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-2"
+                class="sm:hidden px-4 pb-3" x-data="{
+                    query: '',
+                    suggestions: [],
+                    showDropdown: false,
+                    loading: false,
+                    searchTimeout: null,
+                    fetchSuggestions() {
+                        clearTimeout(this.searchTimeout);
+                        if (this.query.length < 2) {
+                            this.suggestions = [];
+                            this.showDropdown = false;
+                            return;
+                        }
+                        this.searchTimeout = setTimeout(() => {
+                            fetch(`{{ route('products.search-suggestions') }}?q=${encodeURIComponent(this.query)}`)
+                                .then(res => res.json())
+                                .then(data => {
+                                    this.suggestions = data;
+                                    this.showDropdown = data.length > 0;
+                                });
+                        }, 300);
+                    }
+                }">
 
-    <div class="flex items-center gap-2">
-        <form action="{{ url('/products') }}" method="GET"
-            class="flex-1 flex items-center border border-[#C99F9F] rounded-full overflow-hidden bg-[#FFF2E5]">
-            <input type="text" name="search" x-model="query" @input="fetchSuggestions()"
-                placeholder="Search for wedding props…" x-ref="searchInput" autocomplete="off"
-                class="flex-1 px-4 py-2.5 text-sm text-secondary placeholder-gray-400 outline-none bg-transparent" />
-            <button type="submit" class="bg-primary px-4 py-2.5 flex-shrink-0 ">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none"
-                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
-                </svg>
-            </button>
-        </form>
+                <div class="flex items-center gap-2">
+                    <form action="{{ url('/products') }}" method="GET"
+                        class="flex-1 flex items-center border border-[#C99F9F] rounded-full overflow-hidden bg-[#FFF2E5]">
+                        <input type="text" name="search" x-model="query" @input="fetchSuggestions()"
+                            placeholder="Search for wedding props…" x-ref="searchInput" autocomplete="off"
+                            class="flex-1 px-4 py-2.5 text-sm text-secondary placeholder-gray-400 outline-none bg-transparent" />
+                        <button type="submit" class="bg-primary px-4 py-2.5 flex-shrink-0 ">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+                            </svg>
+                        </button>
+                    </form>
 
-        <button type="button" @click="searchOpen = false"
-            class="flex-shrink-0 w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center text-secondary hover:text-primary hover:border-primary transition-colors"
-            aria-label="Close search">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-        </button>
-    </div>
-
-    <!-- Mobile Suggestions Dropdown -->
-    <div x-show="showDropdown" x-cloak
-        class="mt-2 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden max-h-80 overflow-y-auto">
-        <template x-for="item in suggestions" :key="item.url">
-            <a :href="item.url" class="flex items-center gap-3 px-4 py-2.5 hover:bg-[#faf5ee] transition-colors border-b border-gray-50 last:border-0">
-                <img :src="item.image" class="w-10 h-10 rounded-lg object-cover flex-shrink-0">
-                <div class="min-w-0 flex-1">
-                    <p class="text-secondary font-semibold truncate" style="font-size:13px;" x-text="item.title"></p>
-                    <p class="text-secondary/40" style="font-size:11px;" x-text="item.category"></p>
+                    <button type="button" @click="searchOpen = false"
+                        class="flex-shrink-0 w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center text-secondary hover:text-primary hover:border-primary transition-colors"
+                        aria-label="Close search">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
                 </div>
-                <span class="text-primary font-bold flex-shrink-0" style="font-size:13px;" x-text="'₹' + item.price"></span>
-            </a>
-        </template>
-    </div>
-</div>
+
+                <!-- Mobile Suggestions Dropdown -->
+                <div x-show="showDropdown" x-cloak
+                    class="mt-2 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden max-h-80 overflow-y-auto">
+                    <template x-for="item in suggestions" :key="item.url">
+                        <a :href="item.url"
+                            class="flex items-center gap-3 px-4 py-2.5 hover:bg-[#faf5ee] transition-colors border-b border-gray-50 last:border-0">
+                            <img :src="item.image" class="w-10 h-10 rounded-lg object-cover flex-shrink-0">
+                            <div class="min-w-0 flex-1">
+                                <p class="text-secondary font-semibold truncate" style="font-size:13px;"
+                                    x-text="item.title"></p>
+                                <p class="text-secondary/40" style="font-size:11px;" x-text="item.category"></p>
+                            </div>
+                            <span class="text-primary font-bold flex-shrink-0" style="font-size:13px;"
+                                x-text="'₹' + item.price"></span>
+                        </a>
+                    </template>
+                </div>
+            </div>
 
         </div>
 

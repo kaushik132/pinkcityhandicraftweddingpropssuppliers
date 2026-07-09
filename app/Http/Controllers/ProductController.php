@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\Wishlist;
+use App\Models\Seo;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
     public function index(Request $request)
     {
+          $homepage = Seo::latest()->first();
         $categories = ProductCategory::withCount('products')->orderBy('name')->get();
 
         $query = Product::with(['category', 'images'])->where('is_active', true);
@@ -62,11 +64,17 @@ class ProductController extends Controller
 
         $products = $query->paginate(12)->withQueryString();
 
+          $seo_data['seo_title'] = $homepage->seo_title_products ?? 'Shop Handicrafts & Wedding Props — Pink City';
+    $seo_data['seo_description'] = $homepage->seo_des_products ?? '';
+    $seo_data['keywords'] = $homepage->seo_key_products ?? '';
+    $canocial = url('/products');
+
+
         $wishlistedIds = auth()->check()
             ? Wishlist::where('user_id', auth()->id())->pluck('product_id')->toArray()
             : [];
 
-        return view('products', compact('categories', 'products', 'wishlistedIds'));
+        return view('products', compact('categories', 'products', 'wishlistedIds', 'seo_data', 'canocial'));
     }
 
     public function show($slug)
@@ -83,7 +91,15 @@ class ProductController extends Controller
             ? Wishlist::where('user_id', auth()->id())->where('product_id', $product->id)->exists()
             : false;
 
-        return view('product_detail', compact('product', 'relatedProducts', 'isWishlisted'));
+              $homepage = Seo::latest()->first();
+
+
+    $seo_data['seo_title'] = $product->title . ' — Pink City';
+    $seo_data['seo_description'] = $product->short_description ?? ($homepage->seo_des_products ?? '');
+    $seo_data['keywords'] = $homepage->seo_key_products ?? '';
+    $canocial = url('/product/' . $product->slug);
+
+        return view('product_detail', compact('product', 'relatedProducts', 'isWishlisted', 'seo_data', 'canocial'));
     }
 
     public function searchSuggestions(Request $request)

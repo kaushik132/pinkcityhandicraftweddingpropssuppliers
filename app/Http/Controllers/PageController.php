@@ -4,19 +4,33 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Contact;
+use App\Models\Seo;
 
 class PageController extends Controller
 {
     public function about()
     {
-        return view('about');
+        $homepage = Seo::latest()->first();
+
+    $seo_data['seo_title'] = $homepage->seo_title_about ?? 'About Us — Pink City';
+    $seo_data['seo_description'] = $homepage->seo_des_about ?? '';
+    $seo_data['keywords'] = $homepage->seo_key_about ?? '';
+    $canocial = url('/about');
+         return view('about', compact('seo_data', 'canocial'));
     }
 
-    public function contact()
-    {
-        return view('contact');
-    }
 
+public function contact()
+{
+    $homepage = Seo::latest()->first();
+
+    $seo_data['seo_title'] = $homepage->seo_title_contact ?? 'Contact Us — Pink City';
+    $seo_data['seo_description'] = $homepage->seo_des_contact ?? '';
+    $seo_data['keywords'] = $homepage->seo_key_contact ?? '';
+    $canocial = url('/contact');
+
+    return view('contact', compact('seo_data', 'canocial'));
+}
     public function contactSubmit(Request $request)
     {
 

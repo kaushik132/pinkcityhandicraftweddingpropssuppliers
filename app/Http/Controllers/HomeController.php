@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\Wishlist;
+use App\Models\Seo;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
@@ -37,6 +38,13 @@ class HomeController extends Controller
             ? Wishlist::where('user_id', auth()->id())->pluck('product_id')->toArray()
             : [];
 
-        return view('index', compact('categories', 'bestSelling', 'flashSale', 'wishlistedIds'));
+             $homepage = Seo::latest()->first();
+
+    $seo_data['seo_title'] = $homepage->seo_title_home ?? 'Pink City — Handicraft & Wedding Props';
+    $seo_data['seo_description'] = $homepage->seo_des_home ?? '';
+    $seo_data['keywords'] = $homepage->seo_key_home ?? '';
+    $canocial = url('/');
+
+        return view('index', compact('categories', 'bestSelling', 'flashSale', 'wishlistedIds','seo_data', 'canocial'));
     }
 }
