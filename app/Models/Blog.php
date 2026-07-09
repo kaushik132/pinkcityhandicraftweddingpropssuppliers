@@ -9,6 +9,7 @@ class Blog extends Model
     protected $fillable = [
         'blog_category_id', 'title', 'slug', 'image',
         'excerpt', 'content', 'read_time', 'views', 'published_at',
+          'seo_title', 'seo_description', 'seo_keywords',
     ];
 
     protected $casts = [

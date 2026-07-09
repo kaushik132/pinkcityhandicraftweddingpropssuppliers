@@ -48,12 +48,9 @@ class BlogController extends Controller
             ->take(3)
             ->get();
 
-            $homepage = Seo::latest()->first();
-
-
-    $seo_data['seo_title'] = $blog->title . ' — Pink City Blog';
-    $seo_data['seo_description'] = $blog->excerpt ?? ($homepage->seo_des_blog ?? '');
-    $seo_data['keywords'] = $homepage->seo_key_blog ?? '';
+       $seo_data['seo_title'] = $blog->seo_title ?: $blog->title . ' — Pink City Blog';
+    $seo_data['seo_description'] = $blog->seo_description ?: $blog->excerpt;
+    $seo_data['keywords'] = $blog->seo_keywords ?: '';
     $canocial = url('/blog/' . $blog->slug);
 
         return view('blog-detail', compact('blog', 'categories', 'popularPosts', 'seo_data', 'canocial'));

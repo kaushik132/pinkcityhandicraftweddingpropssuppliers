@@ -10,6 +10,7 @@ class Product extends Model
         'product_category_id', 'title', 'slug', 'sku', 'product_badge',
         'short_description', 'description', 'price', 'sale_price',
         'stock', 'rating', 'reviews_count', 'specs', 'ships_in_days', 'is_active',
+        'seo_title', 'seo_description', 'seo_keywords',
     ];
 
     protected $casts = [

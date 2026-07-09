@@ -91,12 +91,12 @@ class ProductController extends Controller
             ? Wishlist::where('user_id', auth()->id())->where('product_id', $product->id)->exists()
             : false;
 
-              $homepage = Seo::latest()->first();
+           
 
 
-    $seo_data['seo_title'] = $product->title . ' — Pink City';
-    $seo_data['seo_description'] = $product->short_description ?? ($homepage->seo_des_products ?? '');
-    $seo_data['keywords'] = $homepage->seo_key_products ?? '';
+      $seo_data['seo_title'] = $product->seo_title ?: $product->title . ' — Pink City';
+    $seo_data['seo_description'] = $product->seo_description ?: $product->short_description;
+    $seo_data['keywords'] = $product->seo_keywords ?: '';
     $canocial = url('/product/' . $product->slug);
 
         return view('product_detail', compact('product', 'relatedProducts', 'isWishlisted', 'seo_data', 'canocial'));

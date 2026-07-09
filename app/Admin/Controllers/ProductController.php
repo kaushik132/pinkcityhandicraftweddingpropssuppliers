@@ -144,6 +144,11 @@ class ProductController extends AdminController
                     ->uniqueName();
             });
         });
+        $form->tab('Product SEO', function ($form) {
+            $form->text('seo_title', __('SEO Title'))->help('Leave empty to auto-use product title');
+            $form->textarea('seo_description', __('SEO Description'))->rows(3);
+            $form->text('seo_keywords', __('SEO Keywords'))->help('Comma separated keywords');
+        });
         return $form;
     }
 }

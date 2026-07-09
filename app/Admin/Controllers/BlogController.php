@@ -83,6 +83,9 @@ class BlogController extends AdminController
         $form->number('read_time', __('Read time'))->default(5);
         $form->number('views', __('Views'));
         $form->datetime('published_at', __('Published at'))->default(date('Y-m-d H:i:s'));
+        $form->text('seo_title', __('SEO Title'))->help('Leave empty to auto-use blog title');
+        $form->textarea('seo_description', __('SEO Description'))->rows(3);
+        $form->text('seo_keywords', __('SEO Keywords'))->help('Comma separated keywords');
 
         return $form;
     }
