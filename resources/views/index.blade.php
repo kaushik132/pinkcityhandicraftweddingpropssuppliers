@@ -6,148 +6,46 @@
             <div class="swiper-wrapper">
 
                 <!-- Slide 1 -->
-                <div class="swiper-slide">
-                    <div class="relative w-full h-[480px] md:h-[520px] lg:h-[560px] overflow-hidden bg-secondary">
-                        <img src="https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=1600&q=80" alt="Shaadi Utsav"
-                            class="absolute inset-0 w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-transparent"></div>
+                @foreach ($homeBanners as $banner)
+                    <div class="swiper-slide">
+                        <div class="relative w-full h-[480px] md:h-[520px] lg:h-[560px] overflow-hidden bg-secondary">
+                            <img src="{{ url('uploads/' . $banner->image) }}" alt="{{ $banner->alt }}"
+                                class="absolute inset-0 w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-transparent"></div>
 
-                        <div class="relative z-10 max-w-7xl mx-auto h-full px-5 md:px-10 flex items-center">
-                            <div class="max-w-xl">
+                            <div class="relative z-10 max-w-7xl mx-auto h-full px-5 md:px-10 flex items-center">
+                                <div class="max-w-xl">
 
-                                <div class="hero-anim flex items-center gap-3 mb-4" style="--d:0.1s">
-                                    <span class="w-8 h-px bg-gold"></span>
-                                    <span
-                                        class="text-gold text-xs md:text-sm font-semibold tracking-widest uppercase">Weekend
-                                        Special Offer</span>
+                                    <div class="hero-anim flex items-center gap-3 mb-4" style="--d:0.1s">
+                                        <span class="w-8 h-px bg-gold"></span>
+                                        <span
+                                            class="text-gold text-xs md:text-sm font-semibold tracking-widest uppercase">{{ $banner->category_name }}</span>
+                                    </div>
+
+                                    <h1 class="hero-anim font-playfair text-white text-4xl md:text-5xl lg:text-6xl leading-tight mb-4"
+                                        style="--d:0.25s">
+                                        {{ $banner->title }}
+                                    </h1>
+
+                                    <p class="hero-anim text-white/80 mb-7" style="font-size:16px;--d:0.4s">
+                                        {{ $banner->short_note }}
+                                    </p>
+
+                                    <div class="hero-anim flex flex-wrap items-center gap-3" style="--d:0.55s">
+                                        <a href="{{ $banner->first_button_link }}"
+                                            class="bg-gold hover:bg-gold/90 text-secondary font-semibold px-6 py-3 rounded-full transition-colors text-sm">{{ $banner->first_button_name }}</a>
+                                        <a href=""
+                                            class="flex items-center gap-2 border border-white/40 text-white px-6 py-3 rounded-full hover:border-gold hover:text-gold transition-colors text-sm">
+                                            <i class="{{ $banner->second_button_icon }}"></i>
+                                            {{ $banner->second_button_name }}
+                                        </a>
+                                    </div>
+
                                 </div>
-
-                                <h1 class="hero-anim font-playfair text-white text-4xl md:text-5xl lg:text-6xl leading-tight mb-4"
-                                    style="--d:0.25s">
-                                    Shaadi Utsav
-                                </h1>
-
-                                <p class="hero-anim text-white/80 mb-7" style="font-size:16px;--d:0.4s">
-                                    Handcrafted Wedding Props & Décor — Straight from Jaipur's Master Artisans
-                                </p>
-
-                                <div class="hero-anim flex flex-wrap items-center gap-3" style="--d:0.55s">
-                                    <a href="#"
-                                        class="bg-gold hover:bg-gold/90 text-secondary font-semibold px-6 py-3 rounded-full transition-colors text-sm">Shop
-                                        the Sale</a>
-                                    <a href="#"
-                                        class="flex items-center gap-2 border border-white/40 text-white px-6 py-3 rounded-full hover:border-gold hover:text-gold transition-colors text-sm">
-                                        <i class="fa-solid fa-tags text-gold"></i> Up to 60% OFF + Free Shipping
-                                    </a>
-                                </div>
-
                             </div>
                         </div>
-
-                        <!-- 60% badge -->
-                        <div class="hidden lg:flex absolute bottom-10 right-16 z-10 bg-gold text-secondary rounded px-5 py-3 flex-col items-center shadow-xl hero-anim"
-                            style="--d:0.7s">
-                            <span class="text-2xl font-bold leading-none">60%</span>
-                            <span class="text-xs font-semibold">OFF Today</span>
-                            <span class="text-[10px]">+ Free Shipping</span>
-                        </div>
                     </div>
-                </div>
-
-                <!-- Slide 2 -->
-                <div class="swiper-slide">
-                    <div class="relative w-full h-[480px] md:h-[520px] lg:h-[560px] overflow-hidden bg-secondary">
-                        <img src="https://images.unsplash.com/photo-1606293459339-aa5a25b7c8f6?w=1600&q=80"
-                            alt="Mandap Décor" class="absolute inset-0 w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-transparent"></div>
-
-                        <div class="relative z-10 max-w-7xl mx-auto h-full px-5 md:px-10 flex items-center">
-                            <div class="max-w-xl">
-
-                                <div class="hero-anim flex items-center gap-3 mb-4" style="--d:0.1s">
-                                    <span class="w-8 h-px bg-gold"></span>
-                                    <span class="text-gold text-xs md:text-sm font-semibold tracking-widest uppercase">New
-                                        Arrival</span>
-                                </div>
-
-                                <h1 class="hero-anim font-playfair text-white text-4xl md:text-5xl lg:text-6xl leading-tight mb-4"
-                                    style="--d:0.25s">
-                                    Mandap Magic
-                                </h1>
-
-                                <p class="hero-anim text-white/80 mb-7" style="font-size:16px;--d:0.4s">
-                                    Royal Backdrops & Stage Décor Handpicked for Your Big Day
-                                </p>
-
-                                <div class="hero-anim flex flex-wrap items-center gap-3" style="--d:0.55s">
-                                    <a href="#"
-                                        class="bg-gold hover:bg-gold/90 text-secondary font-semibold px-6 py-3 rounded-full transition-colors text-sm">Explore
-                                        Collection</a>
-                                    <a href="#"
-                                        class="flex items-center gap-2 border border-white/40 text-white px-6 py-3 rounded-full hover:border-gold hover:text-gold transition-colors text-sm">
-                                        <i class="fa-solid fa-truck-fast text-gold"></i> Free Pan India Delivery
-                                    </a>
-                                </div>
-
-                            </div>
-                        </div>
-
-                        <div class="hidden lg:flex absolute bottom-10 right-16 z-10 bg-gold text-secondary rounded px-5 py-3 flex-col items-center shadow-xl hero-anim"
-                            style="--d:0.7s">
-                            <span class="text-2xl font-bold leading-none">New</span>
-                            <span class="text-xs font-semibold">Collection</span>
-                            <span class="text-[10px]">Handcrafted</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Slide 3 -->
-                <div class="swiper-slide">
-                    <div class="relative w-full h-[480px] md:h-[520px] lg:h-[560px] overflow-hidden bg-secondary">
-                        <img src="https://images.unsplash.com/photo-1617791160505-6f00504e3519?w=1600&q=80"
-                            alt="Pottery Sale" class="absolute inset-0 w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-transparent"></div>
-
-                        <div class="relative z-10 max-w-7xl mx-auto h-full px-5 md:px-10 flex items-center">
-                            <div class="max-w-xl">
-
-                                <div class="hero-anim flex items-center gap-3 mb-4" style="--d:0.1s">
-                                    <span class="w-8 h-px bg-gold"></span>
-                                    <span
-                                        class="text-gold text-xs md:text-sm font-semibold tracking-widest uppercase">Limited
-                                        Time</span>
-                                </div>
-
-                                <h1 class="hero-anim font-playfair text-white text-4xl md:text-5xl lg:text-6xl leading-tight mb-4"
-                                    style="--d:0.25s">
-                                    Blue Pottery Fest
-                                </h1>
-
-                                <p class="hero-anim text-white/80 mb-7" style="font-size:16px;--d:0.4s">
-                                    Authentic Jaipur Pottery & Ceramics, Handcrafted with Love
-                                </p>
-
-                                <div class="hero-anim flex flex-wrap items-center gap-3" style="--d:0.55s">
-                                    <a href="#"
-                                        class="bg-gold hover:bg-gold/90 text-secondary font-semibold px-6 py-3 rounded-full transition-colors text-sm">Shop
-                                        Pottery</a>
-                                    <a href="#"
-                                        class="flex items-center gap-2 border border-white/40 text-white px-6 py-3 rounded-full hover:border-gold hover:text-gold transition-colors text-sm">
-                                        <i class="fa-solid fa-bolt text-gold"></i> Flash Sale Ends Soon
-                                    </a>
-                                </div>
-
-                            </div>
-                        </div>
-
-                        <div class="hidden lg:flex absolute bottom-10 right-16 z-10 bg-gold text-secondary rounded px-5 py-3 flex-col items-center shadow-xl hero-anim"
-                            style="--d:0.7s">
-                            <span class="text-2xl font-bold leading-none">40%</span>
-                            <span class="text-xs font-semibold">OFF Today</span>
-                            <span class="text-[10px]">Limited Stock</span>
-                        </div>
-                    </div>
-                </div>
+                @endforeach
 
             </div>
 
@@ -481,142 +379,46 @@
             <div class="relative" data-aos="fade-up" data-aos-delay="100">
                 <div class="swiper testimonial-swiper">
                     <div class="swiper-wrapper">
+                        @forelse($productreview as $review)
+                            @php
+                                $colors = ['#C2255C', '#8B2635', '#E4657A', '#D4943A', '#5B7C99'];
+                                $bgColor = $colors[$review->user_id % count($colors)];
 
-                        <!-- Card 1 -->
-                        <div class="swiper-slide">
-                            <div
-                                class="bg-white/5 border border-white/10 rounded-xl p-6 h-full flex flex-col justify-between">
-                                <div>
-                                    <div class="flex items-center gap-1 mb-4">
-                                        <i class="fa-solid fa-star text-gold text-sm"></i>
-                                        <i class="fa-solid fa-star text-gold text-sm"></i>
-                                        <i class="fa-solid fa-star text-gold text-sm"></i>
-                                        <i class="fa-solid fa-star text-gold text-sm"></i>
-                                        <i class="fa-solid fa-star text-gold text-sm"></i>
-                                    </div>
-                                    <p class="text-white/75 leading-relaxed" style="font-size:14px;">"Absolutely stunning
-                                        quality! Ordered wedding props for my daughter's shaadi and every single piece was
-                                        better than expected. The handpainting is exquisite."</p>
-                                </div>
-                                <div class="flex items-center gap-3 mt-6">
-                                    <div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white font-semibold flex-shrink-0"
-                                        style="font-size:13px;">PS</div>
+                                $words = explode(' ', $review->user->name);
+                                $initials = strtoupper(
+                                    substr($words[0], 0, 1) . (isset($words[1]) ? substr($words[1], 0, 1) : ''),
+                                );
+                            @endphp
+                            <div class="swiper-slide">
+                                <div
+                                    class="bg-white/5 border border-white/10 rounded-xl p-6 h-full flex flex-col justify-between">
                                     <div>
-                                        <p class="text-white font-semibold" style="font-size:14px;">Priya Sharma</p>
-                                        <p class="text-white/40" style="font-size:12px;">Delhi</p>
+                                        <div class="flex items-center gap-1 mb-4">
+                                            @for ($i = 1; $i <= 5; $i++)
+                                                <i
+                                                    class="fa-{{ $i <= $review->rating ? 'solid' : 'regular' }} fa-star text-gold text-sm"></i>
+                                            @endfor
+                                        </div>
+                                        <p class="text-white/75 leading-relaxed" style="font-size:14px;">
+                                            "{{ $review->review }}"</p>
+                                    </div>
+                                    <div class="flex items-center gap-3 mt-6">
+                                        <div class="w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0"
+                                            style="background:{{ $bgColor }}; font-size:13px;">{{ $initials }}
+                                        </div>
+                                        <div>
+                                            <p class="text-white font-semibold" style="font-size:14px;">
+                                                {{ $review->user->name }}</p>
+                                            @if ($review->city)
+                                                <p class="text-white/40" style="font-size:12px;">{{ $review->city }}</p>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Card 2 -->
-                        <div class="swiper-slide">
-                            <div
-                                class="bg-white/5 border border-white/10 rounded-xl p-6 h-full flex flex-col justify-between">
-                                <div>
-                                    <div class="flex items-center gap-1 mb-4">
-                                        <i class="fa-solid fa-star text-gold text-sm"></i>
-                                        <i class="fa-solid fa-star text-gold text-sm"></i>
-                                        <i class="fa-solid fa-star text-gold text-sm"></i>
-                                        <i class="fa-solid fa-star text-gold text-sm"></i>
-                                        <i class="fa-solid fa-star text-gold text-sm"></i>
-                                    </div>
-                                    <p class="text-white/75 leading-relaxed" style="font-size:14px;">"Pink City has become
-                                        my go-to for all home décor needs. The Rajasthani craft pieces are 100% authentic
-                                        and prices are very reasonable."</p>
-                                </div>
-                                <div class="flex items-center gap-3 mt-6">
-                                    <div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white font-semibold flex-shrink-0"
-                                        style="font-size:13px;">RG</div>
-                                    <div>
-                                        <p class="text-white font-semibold" style="font-size:14px;">Ramesh Gupta</p>
-                                        <p class="text-white/40" style="font-size:12px;">Mumbai</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Card 3 -->
-                        <div class="swiper-slide">
-                            <div
-                                class="bg-white/5 border border-white/10 rounded-xl p-6 h-full flex flex-col justify-between">
-                                <div>
-                                    <div class="flex items-center gap-1 mb-4">
-                                        <i class="fa-solid fa-star text-gold text-sm"></i>
-                                        <i class="fa-solid fa-star text-gold text-sm"></i>
-                                        <i class="fa-solid fa-star text-gold text-sm"></i>
-                                        <i class="fa-solid fa-star text-gold text-sm"></i>
-                                        <i class="fa-solid fa-star text-gold text-sm"></i>
-                                    </div>
-                                    <p class="text-white/75 leading-relaxed" style="font-size:14px;">"Fast delivery,
-                                        beautiful packaging, and the products look even better in person. The brass Ganesha
-                                        figurine I ordered is now the centerpiece of my living room!"</p>
-                                </div>
-                                <div class="flex items-center gap-3 mt-6">
-                                    <div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white font-semibold flex-shrink-0"
-                                        style="font-size:13px;">AV</div>
-                                    <div>
-                                        <p class="text-white font-semibold" style="font-size:14px;">Anita Verma</p>
-                                        <p class="text-white/40" style="font-size:12px;">Bangalore</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Card 4 -->
-                        <div class="swiper-slide">
-                            <div
-                                class="bg-white/5 border border-white/10 rounded-xl p-6 h-full flex flex-col justify-between">
-                                <div>
-                                    <div class="flex items-center gap-1 mb-4">
-                                        <i class="fa-solid fa-star text-gold text-sm"></i>
-                                        <i class="fa-solid fa-star text-gold text-sm"></i>
-                                        <i class="fa-solid fa-star text-gold text-sm"></i>
-                                        <i class="fa-solid fa-star text-gold text-sm"></i>
-                                        <i class="fa-regular fa-star text-gold text-sm"></i>
-                                    </div>
-                                    <p class="text-white/75 leading-relaxed" style="font-size:14px;">"Ordered the entire
-                                        mandap decoration set and it was absolutely gorgeous. The team was very helpful with
-                                        customization requests. Highly recommend!"</p>
-                                </div>
-                                <div class="flex items-center gap-3 mt-6">
-                                    <div class="w-9 h-9 rounded-full bg-gold flex items-center justify-center text-secondary font-semibold flex-shrink-0"
-                                        style="font-size:13px;">SK</div>
-                                    <div>
-                                        <p class="text-white font-semibold" style="font-size:14px;">Sunita Kapoor</p>
-                                        <p class="text-white/40" style="font-size:12px;">Jaipur</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Card 5 -->
-                        <div class="swiper-slide">
-                            <div
-                                class="bg-white/5 border border-white/10 rounded-xl p-6 h-full flex flex-col justify-between">
-                                <div>
-                                    <div class="flex items-center gap-1 mb-4">
-                                        <i class="fa-solid fa-star text-gold text-sm"></i>
-                                        <i class="fa-solid fa-star text-gold text-sm"></i>
-                                        <i class="fa-solid fa-star text-gold text-sm"></i>
-                                        <i class="fa-solid fa-star text-gold text-sm"></i>
-                                        <i class="fa-solid fa-star text-gold text-sm"></i>
-                                    </div>
-                                    <p class="text-white/75 leading-relaxed" style="font-size:14px;">"Best place for
-                                        authentic Rajasthani handicrafts. The blue pottery collection is stunning and the
-                                        packaging was very careful. Will order again!"</p>
-                                </div>
-                                <div class="flex items-center gap-3 mt-6">
-                                    <div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white font-semibold flex-shrink-0"
-                                        style="font-size:13px;">MJ</div>
-                                    <div>
-                                        <p class="text-white font-semibold" style="font-size:14px;">Mohit Joshi</p>
-                                        <p class="text-white/40" style="font-size:12px;">Pune</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
+                        @empty
+                            <!-- Koi review na ho to swiper empty ho jayega, section hide kar sakte hain -->
+                        @endforelse
                     </div>
                 </div>
 

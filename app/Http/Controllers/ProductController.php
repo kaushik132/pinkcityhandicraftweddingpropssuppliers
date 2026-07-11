@@ -78,30 +78,37 @@ class ProductController extends Controller
     }
 
     public function show($slug)
-    {
-        $product = Product::with(['category', 'images'])->where('slug', $slug)->firstOrFail();
+{
+    $product = Product::with(['category', 'images'])->where('slug', $slug)->firstOrFail();
 
-        $relatedProducts = Product::with(['category', 'images'])
-            ->where('product_category_id', $product->product_category_id)
-            ->where('id', '!=', $product->id)
-            ->take(6)
-            ->get();
+    $relatedProducts = Product::with(['category', 'images'])
+        ->where('product_category_id', $product->product_category_id)
+        ->where('id', '!=', $product->id)
+        ->take(6)
+        ->get();
 
-        $isWishlisted = auth()->check()
-            ? Wishlist::where('user_id', auth()->id())->where('product_id', $product->id)->exists()
-            : false;
+    $isWishlisted = auth()->check()
+        ? \App\Models\Wishlist::where('user_id', auth()->id())->where('product_id', $product->id)->exists()
+        : false;
 
-           
+    $reviews = $product->reviews()->with('user')->get();
 
+    // Rating breakdown (5 star, 4 star waghera ka %)
+    $ratingBreakdown = [];
+    for ($i = 5; $i >= 1; $i--) {
+        $count = $reviews->where('rating', $i)->count();
+        $ratingBreakdown[$i] = $reviews->count() > 0 ? round(($count / $reviews->count()) * 100) : 0;
+    }
 
-      $seo_data['seo_title'] = $product->seo_title ?: $product->title . ' — Pink City';
+    $seo_data['seo_title'] = $product->seo_title ?: $product->title . ' — Pink City';
     $seo_data['seo_description'] = $product->seo_description ?: $product->short_description;
     $seo_data['keywords'] = $product->seo_keywords ?: '';
     $canocial = url('/product/' . $product->slug);
 
-        return view('product_detail', compact('product', 'relatedProducts', 'isWishlisted', 'seo_data', 'canocial'));
-    }
-
+    return view('product_detail', compact(
+        'product', 'relatedProducts', 'isWishlisted', 'reviews', 'ratingBreakdown', 'seo_data', 'canocial'
+    ));
+}
     public function searchSuggestions(Request $request)
 {
     $search = $request->input('q');

@@ -23,17 +23,19 @@ class CartController extends Controller
 
     public function add(Request $request, $productId)
     {
+        $requestedQty = $request->input('quantity', 1);
+
         $item = CartItem::where('user_id', auth()->id())
             ->where('product_id', $productId)
             ->first();
 
         if ($item) {
-            $item->increment('quantity');
+            $item->increment('quantity', $requestedQty);
         } else {
             CartItem::create([
                 'user_id' => auth()->id(),
                 'product_id' => $productId,
-                'quantity' => 1,
+                'quantity' => $requestedQty,
             ]);
         }
 

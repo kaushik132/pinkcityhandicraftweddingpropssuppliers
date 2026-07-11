@@ -16,7 +16,6 @@
             </nav>
         </div>
     </section>
-
     <section x-data="{
         qty: 1,
         wishlisted: {{ $isWishlisted ? 'true' : 'false' }},
@@ -24,8 +23,11 @@
         reviewModal: false,
         selectedRating: 0,
         hoverRating: 0,
+        reviewForm: { city: '', title: '', review: '' },
+        submitting: false,
         activeTab: 'description',
         thumbs: {{ $product->images->pluck('url')->toJson() }},
+
         toggleWish() {
             fetch(`/wishlist/toggle/{{ $product->id }}`, {
                     method: 'POST',
@@ -47,12 +49,81 @@
                     window.dispatchEvent(new CustomEvent('wishlist-updated', { detail: { count: data.count } }));
                 })
                 .catch(err => console.error('Wishlist error:', err));
+        },
+
+        addToCart(redirectToCheckout = false) {
+            fetch(`/cart/add/{{ $product->id }}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').getAttribute('content'),
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ quantity: this.qty }),
+                })
+                .then(res => {
+                    if (res.status === 401) {
+                        window.dispatchEvent(new CustomEvent('open-login-modal'));
+                        return null;
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (!data) return;
+                    window.dispatchEvent(new CustomEvent('cart-updated', { detail: { count: data.count } }));
+
+                    if (redirectToCheckout) {
+                        window.location.href = '{{ url('/checkout') }}';
+                    }
+                })
+                .catch(err => console.error('Cart error:', err));
+        },
+
+        submitReview() {
+            if (this.selectedRating === 0) {
+                alert('Please select a rating.');
+                return;
+            }
+            this.submitting = true;
+            fetch(`/products/{{ $product->id }}/reviews`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').getAttribute('content'),
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        rating: this.selectedRating,
+                        city: this.reviewForm.city,
+                        title: this.reviewForm.title,
+                        review: this.reviewForm.review,
+                    }),
+                })
+                .then(res => {
+                    if (res.status === 401) {
+                        this.reviewModal = false;
+                        window.dispatchEvent(new CustomEvent('open-login-modal'));
+                        this.submitting = false;
+                        return null;
+                    }
+                    return res.json().then(data => ({ status: res.status, body: data }));
+                })
+                .then(result => {
+                    this.submitting = false;
+                    if (!result) return;
+                    if (result.status === 200 || result.status === 201) {
+                        alert(result.body.message);
+                        window.location.reload();
+                    } else {
+                        alert(result.body.message || 'Something went wrong.');
+                    }
+                })
+                .catch(err => {
+                    this.submitting = false;
+                    console.error('Review error:', err);
+                });
         }
     }" class="bg-[#faf5ee]">
-
-
-
-
 
         <!-- Back to Products -->
         <div class="max-w-7xl mx-auto px-4 md:px-10 pb-2">
@@ -190,10 +261,10 @@
 
                 <!-- Add to Cart / Buy Now -->
                 <div class="flex items-center gap-3 mb-5">
-                    <button onclick="addToCart({{ $product->id }}, this)"
+                    <button @click="addToCart(false)"
                         class="flex-1 bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-full transition-colors"
                         style="font-size:14px;">Add to cart</button>
-                    <button
+                    <button @click="addToCart(true)"
                         class="flex-1 border border-primary text-primary hover:bg-primary/5 font-semibold py-3 rounded-full transition-colors"
                         style="font-size:14px;">Buy Now</button>
                 </div>
@@ -330,180 +401,81 @@
 
                     <!-- Average score -->
                     <div class="flex-shrink-0 text-center sm:text-left">
-                        <p class="text-secondary font-bold" style="font-size:44px; line-height:1;">4.6</p>
+                        <p class="text-secondary font-bold" style="font-size:44px; line-height:1;">{{ $product->rating }}
+                        </p>
                         <div class="flex items-center justify-center sm:justify-start gap-0.5 my-1.5">
-                            <i class="fa-solid fa-star text-gold text-sm"></i>
-                            <i class="fa-solid fa-star text-gold text-sm"></i>
-                            <i class="fa-solid fa-star text-gold text-sm"></i>
-                            <i class="fa-solid fa-star text-gold text-sm"></i>
-                            <i class="fa-solid fa-star-half-stroke text-gold text-sm"></i>
+                            @for ($i = 1; $i <= 5; $i++)
+                                <i
+                                    class="fa-{{ $i <= floor($product->rating) ? 'solid' : 'regular' }} fa-star text-gold text-sm"></i>
+                            @endfor
                         </div>
-                        <p class="text-secondary/50" style="font-size:12px;">Based on 127 reviews</p>
+                        <p class="text-secondary/50" style="font-size:12px;">Based on {{ $product->reviews_count }}
+                            reviews</p>
                     </div>
 
                     <!-- Bar breakdown -->
                     <div class="flex-1 flex flex-col gap-2 max-w-md">
-
-                        <div class="flex items-center gap-3">
-                            <div class="flex items-center gap-0.5 flex-shrink-0">
-                                <i class="fa-solid fa-star text-gold text-[10px]"></i>
-                                <i class="fa-solid fa-star text-gold text-[10px]"></i>
-                                <i class="fa-solid fa-star text-gold text-[10px]"></i>
-                                <i class="fa-solid fa-star text-gold text-[10px]"></i>
-                                <i class="fa-solid fa-star text-gold text-[10px]"></i>
+                        @foreach ($ratingBreakdown as $star => $percent)
+                            <div class="flex items-center gap-3">
+                                <div class="flex items-center gap-0.5 flex-shrink-0">
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        <i
+                                            class="fa-{{ $i <= $star ? 'solid' : 'regular' }} fa-star text-gold text-[10px]"></i>
+                                    @endfor
+                                </div>
+                                <div class="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gold rounded-full" style="width:{{ $percent }}%;"></div>
+                                </div>
+                                <span class="text-secondary/50 w-8 text-right flex-shrink-0"
+                                    style="font-size:11px;">{{ $percent }}%</span>
                             </div>
-                            <div class="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                                <div class="h-full bg-gold rounded-full" style="width:70%;"></div>
-                            </div>
-                            <span class="text-secondary/50 w-8 text-right flex-shrink-0" style="font-size:11px;">70
-                                %</span>
-                        </div>
-
-                        <div class="flex items-center gap-3">
-                            <div class="flex items-center gap-0.5 flex-shrink-0">
-                                <i class="fa-solid fa-star text-gold text-[10px]"></i>
-                                <i class="fa-solid fa-star text-gold text-[10px]"></i>
-                                <i class="fa-solid fa-star text-gold text-[10px]"></i>
-                                <i class="fa-solid fa-star text-gold text-[10px]"></i>
-                                <i class="fa-regular fa-star text-gold text-[10px]"></i>
-                            </div>
-                            <div class="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                                <div class="h-full bg-gold rounded-full" style="width:20%;"></div>
-                            </div>
-                            <span class="text-secondary/50 w-8 text-right flex-shrink-0" style="font-size:11px;">20
-                                %</span>
-                        </div>
-
-                        <div class="flex items-center gap-3">
-                            <div class="flex items-center gap-0.5 flex-shrink-0">
-                                <i class="fa-solid fa-star text-gold text-[10px]"></i>
-                                <i class="fa-solid fa-star text-gold text-[10px]"></i>
-                                <i class="fa-solid fa-star text-gold text-[10px]"></i>
-                                <i class="fa-regular fa-star text-gold text-[10px]"></i>
-                                <i class="fa-regular fa-star text-gold text-[10px]"></i>
-                            </div>
-                            <div class="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                                <div class="h-full bg-gold rounded-full" style="width:7%;"></div>
-                            </div>
-                            <span class="text-secondary/50 w-8 text-right flex-shrink-0" style="font-size:11px;">7
-                                %</span>
-                        </div>
-
-                        <div class="flex items-center gap-3">
-                            <div class="flex items-center gap-0.5 flex-shrink-0">
-                                <i class="fa-solid fa-star text-gold text-[10px]"></i>
-                                <i class="fa-solid fa-star text-gold text-[10px]"></i>
-                                <i class="fa-regular fa-star text-gold text-[10px]"></i>
-                                <i class="fa-regular fa-star text-gold text-[10px]"></i>
-                                <i class="fa-regular fa-star text-gold text-[10px]"></i>
-                            </div>
-                            <div class="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                                <div class="h-full bg-gold rounded-full" style="width:2%;"></div>
-                            </div>
-                            <span class="text-secondary/50 w-8 text-right flex-shrink-0" style="font-size:11px;">2
-                                %</span>
-                        </div>
-
-                        <div class="flex items-center gap-3">
-                            <div class="flex items-center gap-0.5 flex-shrink-0">
-                                <i class="fa-solid fa-star text-gold text-[10px]"></i>
-                                <i class="fa-regular fa-star text-gold text-[10px]"></i>
-                                <i class="fa-regular fa-star text-gold text-[10px]"></i>
-                                <i class="fa-regular fa-star text-gold text-[10px]"></i>
-                                <i class="fa-regular fa-star text-gold text-[10px]"></i>
-                            </div>
-                            <div class="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                                <div class="h-full bg-gold rounded-full" style="width:1%;"></div>
-                            </div>
-                            <span class="text-secondary/50 w-8 text-right flex-shrink-0" style="font-size:11px;">1
-                                %</span>
-                        </div>
-
+                        @endforeach
                     </div>
                 </div>
             </div>
 
             <!-- Review Cards -->
             <div class="flex flex-col">
-
-                <!-- Review 1 -->
-                <div class="flex items-start gap-3 py-5 border-t border-gray-200">
-                    <div class="w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0"
-                        style="background:#C2255C; font-size:12px;">PS</div>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-start justify-between gap-3 flex-wrap">
-                            <div>
-                                <p class="text-secondary font-semibold" style="font-size:13px;">Priya Sharma</p>
-                                <p class="text-secondary/40" style="font-size:11px;">Delhi</p>
+                @forelse($reviews as $review)
+                    @php
+                        $colors = ['#C2255C', '#8B2635', '#E4657A', '#D4943A', '#5B7C99'];
+                        $bgColor = $colors[$review->user_id % count($colors)];
+                    @endphp
+                    <div class="flex items-start gap-3 py-5 border-t border-gray-200">
+                        <div class="w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0"
+                            style="background:{{ $bgColor }}; font-size:12px;">{{ $review->initials }}</div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-start justify-between gap-3 flex-wrap">
+                                <div>
+                                    <p class="text-secondary font-semibold" style="font-size:13px;">
+                                        {{ $review->user->name }}</p>
+                                    @if ($review->city)
+                                        <p class="text-secondary/40" style="font-size:11px;">{{ $review->city }}</p>
+                                    @endif
+                                </div>
+                                <span class="text-secondary/40"
+                                    style="font-size:11px;">{{ $review->created_at->format('d M Y') }}</span>
                             </div>
-                            <span class="text-secondary/40" style="font-size:11px;">12 June 2025</span>
-                        </div>
-                        <div class="flex items-center gap-0.5 my-1.5">
-                            <i class="fa-solid fa-star text-gold text-xs"></i>
-                            <i class="fa-solid fa-star text-gold text-xs"></i>
-                            <i class="fa-solid fa-star text-gold text-xs"></i>
-                            <i class="fa-solid fa-star text-gold text-xs"></i>
-                            <i class="fa-solid fa-star text-gold text-xs"></i>
-                        </div>
-                        <p class="text-secondary font-semibold mb-0.5" style="font-size:13px;">Absolutely stunning
-                            quality!</p>
-                        <p class="text-secondary/60" style="font-size:13px; line-height:1.6;">Exactly as described and
-                            even more beautiful in person. Fast delivery and gorgeous packaging.</p>
-                    </div>
-                </div>
-
-                <!-- Review 2 -->
-                <div class="flex items-start gap-3 py-5 border-t border-gray-200">
-                    <div class="w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0"
-                        style="background:#8B2635; font-size:12px;">RG</div>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-start justify-between gap-3 flex-wrap">
-                            <div>
-                                <p class="text-secondary font-semibold" style="font-size:13px;">Ramesh Gupta</p>
-                                <p class="text-secondary/40" style="font-size:11px;">Mumbai</p>
+                            <div class="flex items-center gap-0.5 my-1.5">
+                                @for ($i = 1; $i <= 5; $i++)
+                                    <i
+                                        class="fa-{{ $i <= $review->rating ? 'solid' : 'regular' }} fa-star text-gold text-xs"></i>
+                                @endfor
                             </div>
-                            <span class="text-secondary/40" style="font-size:11px;">8 June 2025</span>
+                            @if ($review->title)
+                                <p class="text-secondary font-semibold mb-0.5" style="font-size:13px;">
+                                    {{ $review->title }}</p>
+                            @endif
+                            <p class="text-secondary/60" style="font-size:13px; line-height:1.6;">{{ $review->review }}
+                            </p>
                         </div>
-                        <div class="flex items-center gap-0.5 my-1.5">
-                            <i class="fa-solid fa-star text-gold text-xs"></i>
-                            <i class="fa-solid fa-star text-gold text-xs"></i>
-                            <i class="fa-solid fa-star text-gold text-xs"></i>
-                            <i class="fa-solid fa-star text-gold text-xs"></i>
-                            <i class="fa-regular fa-star text-gold text-xs"></i>
-                        </div>
-                        <p class="text-secondary font-semibold mb-0.5" style="font-size:13px;">Bought this as a
-                            housewarming gift</p>
-                        <p class="text-secondary/60" style="font-size:13px; line-height:1.6;">My friends absolutely loved
-                            it. Very authentic and well-crafted.</p>
                     </div>
-                </div>
-
-                <!-- Review 3 -->
-                <div class="flex items-start gap-3 py-5 border-t border-gray-200">
-                    <div class="w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0"
-                        style="background:#E4657A; font-size:12px;">AV</div>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-start justify-between gap-3 flex-wrap">
-                            <div>
-                                <p class="text-secondary font-semibold" style="font-size:13px;">Anita Verma</p>
-                                <p class="text-secondary/40" style="font-size:11px;">Bangalore</p>
-                            </div>
-                            <span class="text-secondary/40" style="font-size:11px;">24 June 2025</span>
-                        </div>
-                        <div class="flex items-center gap-0.5 my-1.5">
-                            <i class="fa-solid fa-star text-gold text-xs"></i>
-                            <i class="fa-regular fa-star text-gold text-xs"></i>
-                            <i class="fa-regular fa-star text-gold text-xs"></i>
-                            <i class="fa-regular fa-star text-gold text-xs"></i>
-                            <i class="fa-regular fa-star text-gold text-xs"></i>
-                        </div>
-                        <p class="text-secondary font-semibold mb-0.5" style="font-size:13px;">Great product, minor color
-                            variation</p>
-                        <p class="text-secondary/60" style="font-size:13px; line-height:1.6;">Great product, minor color
-                            variation from photo but still beautiful. Seller was helpful with queries.</p>
+                @empty
+                    <div class="py-10 text-center">
+                        <p class="text-secondary/50" style="font-size:14px;">No reviews yet. Be the first to review this
+                            product!</p>
                     </div>
-                </div>
-
+                @endforelse
             </div>
         </div>
 
@@ -530,7 +502,7 @@
                 <h3 class="text-secondary font-bold mb-1" style="font-size:19px;">Write a Review</h3>
                 <p class="text-secondary/50 mb-5" style="font-size:13px;">Share your experience with this product.</p>
 
-                <form @submit.prevent="reviewModal = false; selectedRating = 0">
+                <form @submit.prevent="submitReview()">
 
                     <!-- Star Rating Picker -->
                     <div class="mb-4">
@@ -546,18 +518,10 @@
                         </div>
                     </div>
 
-                    <!-- Name -->
-                    <div class="mb-4">
-                        <label class="text-secondary font-semibold block mb-1.5" style="font-size:13px;">Your Name</label>
-                        <input type="text" required placeholder="e.g. Priya Sharma"
-                            class="w-full border border-gray-200 rounded-lg px-3.5 py-2.5 outline-none focus:border-primary transition-colors text-secondary"
-                            style="font-size:13px;">
-                    </div>
-
                     <!-- City -->
                     <div class="mb-4">
                         <label class="text-secondary font-semibold block mb-1.5" style="font-size:13px;">City</label>
-                        <input type="text" placeholder="e.g. Jaipur"
+                        <input type="text" x-model="reviewForm.city" placeholder="e.g. Jaipur"
                             class="w-full border border-gray-200 rounded-lg px-3.5 py-2.5 outline-none focus:border-primary transition-colors text-secondary"
                             style="font-size:13px;">
                     </div>
@@ -566,7 +530,7 @@
                     <div class="mb-4">
                         <label class="text-secondary font-semibold block mb-1.5" style="font-size:13px;">Review
                             Title</label>
-                        <input type="text" placeholder="Sum up your experience"
+                        <input type="text" x-model="reviewForm.title" placeholder="Sum up your experience"
                             class="w-full border border-gray-200 rounded-lg px-3.5 py-2.5 outline-none focus:border-primary transition-colors text-secondary"
                             style="font-size:13px;">
                     </div>
@@ -575,7 +539,8 @@
                     <div class="mb-5">
                         <label class="text-secondary font-semibold block mb-1.5" style="font-size:13px;">Your
                             Review</label>
-                        <textarea rows="4" required placeholder="Tell others what you liked or didn't like..."
+                        <textarea rows="4" required x-model="reviewForm.review"
+                            placeholder="Tell others what you liked or didn't like..."
                             class="w-full border border-gray-200 rounded-lg px-3.5 py-2.5 outline-none focus:border-primary transition-colors text-secondary resize-none"
                             style="font-size:13px;"></textarea>
                     </div>
@@ -584,9 +549,12 @@
                         <button type="button" @click="reviewModal = false"
                             class="flex-1 border border-gray-200 text-secondary font-semibold py-2.5 rounded-full hover:bg-gray-50 transition-colors"
                             style="font-size:13px;">Cancel</button>
-                        <button type="submit"
-                            class="flex-1 bg-primary hover:bg-primary/90 text-white font-semibold py-2.5 rounded-full transition-colors"
-                            style="font-size:13px;">Submit Review</button>
+                        <button type="submit" :disabled="submitting"
+                            class="flex-1 bg-primary hover:bg-primary/90 text-white font-semibold py-2.5 rounded-full transition-colors disabled:opacity-50"
+                            style="font-size:13px;">
+                            <span x-show="!submitting">Submit Review</span>
+                            <span x-show="submitting">Submitting...</span>
+                        </button>
                     </div>
 
                 </form>
@@ -635,7 +603,9 @@
                                         <span class="text-green-600 font-semibold"
                                             style="font-size:11px;">{{ $rp->discount_percent }}% off</span>
                                     </div>
-                                    <button onclick="addToCart({{ $product->id }}, this)" class="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-2.5 rounded-full transition-colors" style="font-size:13px;">Add to Cart</button>
+                                    <button onclick="addToCart({{ $rp->id }}, this)"
+                                        class="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-2.5 rounded-full transition-colors"
+                                        style="font-size:13px;">Add to Cart</button>
                                 </div>
                             </div>
                         </div>

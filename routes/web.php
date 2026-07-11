@@ -13,7 +13,9 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\CompanyPolicyController;
+use App\Http\Controllers\ReviewController;
 
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -76,6 +78,7 @@ Route::middleware('auth')->group(function () {
 // Toggle route — auth ke BAHAR, kyunki guest bhi is par click kar sakta hai (heart icon)
 // Controller ke andar khud auth()->check() se 401 return hota hai, taaki AJAX ko clean JSON mile
    Route::post('/wishlist/toggle/{product}', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
+   Route::post('/products/{product}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
 
 
 //
@@ -98,3 +101,9 @@ Route::get('/privacy-policy', [CompanyPolicyController::class, 'privacyPolicy'])
 Route::get('/terms-and-conditions', [CompanyPolicyController::class, 'termsAndConditions'])->name('terms.and.conditions');
 Route::get('/shipping-policy', [CompanyPolicyController::class, 'shippingPolicy'])->name('shipping.policy');
 Route::get('/return-and-refund-policy', [CompanyPolicyController::class, 'returnAndRefundPolicy'])->name('return.and.refund.policy');
+
+
+//
+
+
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');

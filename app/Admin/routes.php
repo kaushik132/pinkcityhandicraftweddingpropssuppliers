@@ -33,4 +33,7 @@ Route::group([
 
     $router->resource('wishlists', WishlistController::class);
     $router->resource('seos', SeoController::class);
+
+    $router->resource('home-banners', HomeBannerController::class);
+    $router->resource('product-reviews', ProductReviewController::class);
 });

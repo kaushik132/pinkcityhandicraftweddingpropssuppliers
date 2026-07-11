@@ -7,10 +7,24 @@ use Illuminate\Database\Eloquent\Model;
 class Product extends Model
 {
     protected $fillable = [
-        'product_category_id', 'title', 'slug', 'sku', 'product_badge',
-        'short_description', 'description', 'price', 'sale_price',
-        'stock', 'rating', 'reviews_count', 'specs', 'ships_in_days', 'is_active',
-        'seo_title', 'seo_description', 'seo_keywords',
+        'product_category_id',
+        'title',
+        'slug',
+        'sku',
+        'product_badge',
+        'short_description',
+        'description',
+        'price',
+        'sale_price',
+        'stock',
+        'rating',
+        'reviews_count',
+        'specs',
+        'ships_in_days',
+        'is_active',
+        'seo_title',
+        'seo_description',
+        'seo_keywords',
     ];
 
     protected $casts = [
@@ -22,11 +36,11 @@ class Product extends Model
         return $this->belongsTo(ProductCategory::class, 'product_category_id', 'id');
     }
 
-public function images()
-{
-    return $this->hasMany(ProductImage::class, 'product_id', 'id')
-                ->orderBy('sort_order');
-}
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class, 'product_id', 'id')
+            ->orderBy('sort_order');
+    }
 
     // main/cover image (first image)
     public function getThumbnailAttribute()
@@ -47,7 +61,12 @@ public function images()
     }
 
     public function wishlistedBy()
-{
-    return $this->hasMany(Wishlist::class);
-}
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(ProductReview::class)->where('is_approved', true)->latest();
+    }
 }
