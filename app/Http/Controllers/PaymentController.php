@@ -8,11 +8,28 @@ use App\Models\OrderItem;
 use App\Models\UserAddress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Razorpay\Api\Api;
+use Illuminate\Support\Facades\Http;
 
 class PaymentController extends Controller
 {
-    // Order place karo — COD ho to seedha, online ho to Razorpay order banao
+    private function cashfreeBaseUrl()
+    {
+        return config('services.cashfree.env') === 'production'
+            ? 'https://api.cashfree.com/pg'
+            : 'https://sandbox.cashfree.com/pg';
+    }
+
+    private function cashfreeHeaders()
+    {
+        return [
+            'x-client-id' => config('services.cashfree.app_id'),
+            'x-client-secret' => config('services.cashfree.secret_key'),
+            'x-api-version' => '2023-08-01',
+            'Content-Type' => 'application/json',
+        ];
+    }
+
+    // Order place karo — COD ho to seedha, online ho to Cashfree order banao
     public function placeOrder(Request $request)
     {
         $request->validate([
@@ -53,7 +70,7 @@ class PaymentController extends Controller
             'shipping_charge' => $shippingCharge,
             'total' => $grandTotal,
             'payment_method' => $request->payment_method,
-            'payment_status' => $request->payment_method === 'cod' ? 'pending' : 'pending',
+            'payment_status' => 'pending',
             'status' => 'placed',
         ]);
 
@@ -77,59 +94,85 @@ class PaymentController extends Controller
             return redirect()->route('confirm.order', $order->id);
         }
 
-        // Online payment — Razorpay order banao
-        $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
+        // Online payment — Cashfree order banao
+        $response = Http::withHeaders($this->cashfreeHeaders())
+            ->post($this->cashfreeBaseUrl() . '/orders', [
+                'order_id' => $order->order_number,
+                'order_amount' => $grandTotal,
+                'order_currency' => 'INR',
+                'customer_details' => [
+                    'customer_id' => 'user_' . auth()->id(),
+                    'customer_name' => $address->full_name,
+                    'customer_email' => auth()->user()->email,
+                    'customer_phone' => $address->mobile,
+                ],
+                'order_meta' => [
+                    'return_url' => route('payment.return', ['order' => $order->id]) . '?order_id={order_id}',
+                    'notify_url' => route('payment.webhook'),
+                ],
+            ]);
 
-        $razorpayOrder = $api->order->create([
-            'receipt' => $order->order_number,
-            'amount' => $grandTotal * 100, // paise mein
-            'currency' => 'INR',
-        ]);
+        if ($response->failed()) {
+            $order->update(['payment_status' => 'failed']);
+            return back()->with('error', 'Unable to initiate payment. Please try again.');
+        }
 
-        $order->update(['razorpay_order_id' => $razorpayOrder['id']]);
+        $data = $response->json();
 
-        return view('razorpay-checkout', [
+        $order->update(['razorpay_order_id' => $data['order_id']]); // yahi column reuse kar rahe hain cashfree order id ke liye
+
+        return view('cashfree-checkout', [
             'order' => $order,
-            'razorpayOrderId' => $razorpayOrder['id'],
-            'amount' => $grandTotal * 100,
-            'razorpayKey' => config('services.razorpay.key'),
+            'paymentSessionId' => $data['payment_session_id'],
+            'cashfreeEnv' => config('services.cashfree.env'),
         ]);
     }
 
-    // Razorpay success callback (JS se yahan POST hoga)
-    public function verify(Request $request)
+    // Cashfree se return hone ke baad yahan aata hai (return_url)
+    public function returnFromCashfree(Request $request, $orderId)
     {
-        $request->validate([
-            'razorpay_payment_id' => 'required',
-            'razorpay_order_id' => 'required',
-            'razorpay_signature' => 'required',
-            'order_id' => 'required',
-        ]);
+        $order = Order::where('user_id', auth()->id())->findOrFail($orderId);
 
-        $order = Order::where('user_id', auth()->id())->findOrFail($request->order_id);
+        $response = Http::withHeaders($this->cashfreeHeaders())
+            ->get($this->cashfreeBaseUrl() . '/orders/' . $order->order_number);
 
-        $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
+        if ($response->failed()) {
+            return redirect()->route('payment')->with('error', 'Unable to verify payment status.');
+        }
 
-        try {
-            $api->utility->verifyPaymentSignature([
-                'razorpay_order_id' => $request->razorpay_order_id,
-                'razorpay_payment_id' => $request->razorpay_payment_id,
-                'razorpay_signature' => $request->razorpay_signature,
-            ]);
+        $data = $response->json();
 
-            $order->update([
-                'payment_status' => 'paid',
-                'razorpay_payment_id' => $request->razorpay_payment_id,
-            ]);
+        if ($data['order_status'] === 'PAID') {
+            $order->update(['payment_status' => 'paid']);
 
             CartItem::where('user_id', auth()->id())->delete();
             session()->forget('checkout_address_id');
 
-            return response()->json(['success' => true, 'redirect' => route('confirm.order', $order->id)]);
-
-        } catch (\Exception $e) {
-            $order->update(['payment_status' => 'failed']);
-            return response()->json(['success' => false, 'message' => 'Payment verification failed.'], 400);
+            return redirect()->route('confirm.order', $order->id);
         }
+
+        $order->update(['payment_status' => 'failed']);
+        return redirect()->route('payment')->with('error', 'Payment was not successful. Please try again.');
+    }
+
+    // Cashfree webhook — server-to-server confirmation (extra reliability ke liye)
+    public function webhook(Request $request)
+    {
+        $payload = $request->all();
+
+        if (($payload['type'] ?? null) === 'PAYMENT_SUCCESS_WEBHOOK') {
+            $orderNumber = $payload['data']['order']['order_id'] ?? null;
+
+            if ($orderNumber) {
+                $order = Order::where('order_number', $orderNumber)->first();
+
+                if ($order && $order->payment_status !== 'paid') {
+                    $order->update(['payment_status' => 'paid']);
+                    CartItem::where('user_id', $order->user_id)->delete();
+                }
+            }
+        }
+
+        return response()->json(['status' => 'ok']);
     }
 }

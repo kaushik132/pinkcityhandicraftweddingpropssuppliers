@@ -61,9 +61,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/checkout/save-address', [CheckoutController::class, 'saveAddress'])->name('checkout.save-address');
 
     // Payment page
-    Route::get('/payment', [CheckoutController::class, 'payment'])->name('payment');
-    Route::post('/payment/place-order', [PaymentController::class, 'placeOrder'])->name('payment.place-order');
-    Route::post('/payment/verify', [PaymentController::class, 'verify'])->name('payment.verify');
+   // Payment page
+Route::get('/payment', [CheckoutController::class, 'payment'])->name('payment');
+Route::post('/payment/place-order', [PaymentController::class, 'placeOrder'])->name('payment.place-order');
+Route::get('/payment/return/{order}', [PaymentController::class, 'returnFromCashfree'])->name('payment.return');
 
     // Confirm order (success page)
     Route::get('/confirm-order/{order}', function (\App\Models\Order $order) {
@@ -80,6 +81,7 @@ Route::middleware('auth')->group(function () {
    Route::post('/wishlist/toggle/{product}', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
    Route::post('/products/{product}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
 
+   Route::post('/payment/webhook', [PaymentController::class, 'webhook'])->name('payment.webhook');
 
 //
 Route::get('/about', [PageController::class, 'about'])->name('about');
